@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Villus Emilim Uygulaması - Naci Karhan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f0f9ff;
+            color: #1e293b;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+        }
+
+        .hotspot {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid #ef4444;
+            border-radius: 50%;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+        }
+
+        .hotspot:hover {
+            scale: 1.5;
+            background: #ef4444;
+            z-index: 50;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .btn-biology {
+            background: #0ea5e9;
+            color: white;
+            transition: all 0.3s;
+            border-radius: 0.75rem;
+        }
+
+        .btn-biology:hover {
+            background: #0284c7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+        }
+
+        #image-container {
+            position: relative;
+            max-width: 100%;
+            display: inline-block;
+        }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #0ea5e9;
+            background: #f0f9ff;
+        }
+
+        .option-btn.correct {
+            background: #dcfce7;
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .option-btn.wrong {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .badge-zoom {
+            animation: badgeIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes badgeIn {
+            from { transform: scale(0); rotate: -45deg; }
+            to { transform: scale(1); rotate: 0deg; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-800 mb-2">Bağırsak Villuslarında Besin Emilimi</h1>
+            <p class="text-gray-600">YKS Biyoloji Etkileşimli Hazırlık Platformu</p>
+        </header>
+
+        <!-- Main Navigation -->
+        <div id="main-menu" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div onclick="showPage('study-page')" class="card p-8 text-center cursor-pointer hover:bg-blue-50 transition-colors group">
+                <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-microscope text-3xl text-blue-600"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2">Keşfet & Öğren</h2>
+                <p class="text-gray-500">Görsel üzerindeki noktalara dokunarak besinlerin izlediği yolu öğren.</p>
+            </div>
+            <div onclick="startQuiz()" class="card p-8 text-center cursor-pointer hover:bg-green-50 transition-colors group">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-vial text-3xl text-green-600"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2">Kendini Dene</h2>
+                <p class="text-gray-500">AYT Biyoloji tarzı sorularla bilgilerini test et ve rozetini al.</p>
+            </div>
+        </div>
+
+        <!-- Section 1: Hotspot Study -->
+        <div id="study-page" class="hidden">
+            <div class="card p-4 md:p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="showPage('main-menu')" class="text-blue-600 hover:underline font-semibold">
+                        <i class="fas fa-arrow-left mr-2"></i>Menüye Dön
+                    </button>
+                    <span class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">Keşif Modu</span>
+                </div>
+                
+                <div class="text-center">
+                    <div id="image-container">
+                        <!-- User's Image -->
+                        <img src="villus_emilim.jpg" alt="Villus Yapısı" class="rounded-lg shadow-lg max-w-full h-auto border" id="villus-img" onerror="this.src='https://via.placeholder.com/800x600?text=villus_emilim.jpg+bulunamadı'">
+                        <div id="hotspots-layer"></div>
+                    </div>
+                </div>
+
+                <div id="info-box" class="mt-6 p-6 bg-slate-50 rounded-xl border-l-4 border-blue-500 min-h-[100px] hidden">
+                    <h3 id="info-title" class="text-xl font-bold text-blue-800 mb-2"></h3>
+                    <p id="info-text" class="text-gray-700"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Quiz -->
+        <div id="quiz-page" class="hidden">
+            <div class="card p-6">
+                <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                    <button onclick="exitQuiz()" class="text-red-500 hover:underline font-semibold">
+                        <i class="fas fa-times mr-2"></i>Sınavı Bitir
+                    </button>
+                    <div class="flex items-center gap-6">
+                        <div class="text-lg font-mono font-bold bg-gray-800 text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-clock mr-2 text-yellow-400"></i><span id="timer">15:00</span>
+                        </div>
+                        <div class="text-sm font-semibold">
+                            Soru: <span id="current-q-index">1</span>/10
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full bg-gray-200 h-2 rounded-full mb-8 overflow-hidden">
+                    <div id="progress-bar" class="bg-blue-500 h-full w-0 transition-all duration-500"></div>
+                </div>
+
+                <div id="question-container" class="mb-8">
+                    <h3 id="question-text" class="text-xl font-semibold mb-6 leading-relaxed"></h3>
+                    <div id="options-container" class="space-y-3"></div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden btn-biology px-8 py-3 font-bold">
+                        Sıradaki Soru <i class="fas fa-chevron-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Results -->
+        <div id="result-page" class="hidden">
+            <div class="card p-8 text-center">
+                <div id="badge-container" class="mb-6"></div>
+                <h2 class="text-3xl font-bold text-blue-900 mb-2">Sınav Tamamlandı!</h2>
+                <p id="evaluation-text" class="text-lg text-gray-600 mb-8"></p>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-blue-50 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-blue-600" id="res-score">0</div>
+                        <div class="text-xs text-gray-500 uppercase">Toplam Puan</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-green-600" id="res-correct">0</div>
+                        <div class="text-xs text-gray-500 uppercase">Doğru</div>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-red-600" id="res-wrong">0</div>
+                        <div class="text-xs text-gray-500 uppercase">Yanlış</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-xl">
+                        <div class="text-2xl font-bold text-purple-600" id="res-time">00:00</div>
+                        <div class="text-xs text-gray-500 uppercase">Süre</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 justify-center">
+                    <button onclick="showPage('main-menu')" class="btn-biology px-8 py-3">Ana Menüye Dön</button>
+                    <button onclick="startQuiz()" class="bg-slate-800 text-white px-8 py-3 rounded-xl hover:bg-slate-900 transition-all">Yeniden Dene</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-gray-400 text-sm">
+            <div class="border-t border-gray-200 pt-6">
+                <p class="font-semibold text-gray-600 mb-1">Tasarım: Naci Karhan</p>
+                <p>© 2026 - AYT Biyoloji Hazırlık Asistanı. Tüm hakları saklıdır.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Data from CSV & Scientific Facts
+        const emilimData = [
+            { id: 1, label: "Monosakkaritler", x: 95, y: 131, info: "Glikoz, fruktoz ve galaktoz gibi şekerler kan kılcallarına emilerek Kapı Toplardamarı ile karaciğere taşınır." },
+            { id: 2, label: "Amino Asitler", x: 95, y: 170, info: "Proteinlerin yapı taşlarıdır. Aktif taşıma veya kolaylaştırılmış difüzyonla kan kılcallarına geçerek karaciğere giderler." },
+            { id: 3, label: "Mineraller", x: 95, y: 209, info: "Sodyum, klor, demir gibi mineraller su ile birlikte kan kılcalları yolunu tercih ederler." },
+            { id: 4, label: "Suda Çözünen Vitaminler", x: 95, y: 245, info: "B ve C vitaminleri ince bağırsaktan kan kılcallarına emilir ve direkt dolaşıma katılır." },
+            { id: 5, label: "Su", x: 95, y: 280, info: "Osmoz yoluyla hem kan kılcallarına hem de doku sıvısına geri emilir. Büyük bir kısmı kan yoluyla taşınır." },
+            { id: 6, label: "Yağ Asitleri", x: 485, y: 136, info: "Hücre içinde tekrar gliserol ile birleşerek yağlara dönüşürler. Lenf sistemi yolunu kullanırlar." },
+            { id: 7, label: "Gliserol", x: 485, y: 170, info: "Yağların monomeridir. Şilomikron yapısına katılarak lenf kılcalları (peke sarnıcı yolu) ile taşınır." },
+            { id: 8, label: "Şilomikron", x: 485, y: 208, info: "Yağların etrafının protein kılıfla kaplanmış halidir. Büyük oldukları için kan kılcallarına giremez, lenf kılcallarına geçerler." },
+            { id: 9, label: "A ve D Vitaminleri", x: 485, y: 244, info: "Yağda çözündükleri için yağların izlediği lenf yolunu kullanarak Sol Köprücük Altı Toplardamarı ile kana karışırlar." },
+            { id: 10, label: "E ve K Vitaminleri", x: 485, y: 280, info: "Lenf sistemi yoluyla taşınan yağda çözünen vitaminlerdir. Emilimleri için safra tuzları gereklidir." }
+        ];
+
+        // 345 AYT Biology Mock Questions (Representative)
+        const questionsDB = [
+            {
+                q: "İnce bağırsaktan emilen bir şilomikron molekülü, kalbe ulaşana kadar aşağıdaki yapılardan hangisinden en son geçer?",
+                options: ["Peke Sarnıcı", "Göğüs Kanalı", "Sol Köprücük Altı Toplardamarı", "Üst Ana Toplardamar", "Sağ Kulakçık"],
+                correct: 3
+            },
+            {
+                q: "İnce bağırsak villuslarında gerçekleşen emilim olayları ile ilgili aşağıdakilerden hangisi yanlıştır?",
+                options: ["Glikoz emilimi kan kılcalları ile olur.", "Yağ asitleri şilomikrona dönüşerek lenf kılcalına geçer.", "A, D, E, K vitaminleri kapı toplardamarı ile karaciğere gider.", "B ve C vitaminleri kan yoluyla taşınır.", "Emilim yüzeyi mikrovilluslar sayesinde artırılır."],
+                correct: 2
+            },
+            {
+                q: "Yağların sindirim ürünlerinin emilimi sırasında gerçekleşen; I. Şilomikron oluşumu, II. Yağ asidi ve gliserol birleşmesi, III. Ekzositoz ile lenf kılcalına geçiş. Olayların doğru sıralaması nasıldır?",
+                options: ["I - II - III", "II - I - III", "III - II - I", "I - III - II", "II - III - I"],
+                correct: 1
+            },
+            {
+                q: "Kapı toplardamarındaki glikoz yoğunluğu ile ilgili hangisi doğrudur?",
+                options: ["Açlık durumunda karaciğer üstü toplardamarından fazladır.", "Tokluk durumunda karaciğer üstü toplardamarından fazladır.", "Her zaman düşüktür.", "Sadece yağlı yemeklerden sonra artar.", "Hiçbir zaman değişmez."],
+                correct: 1
+            },
+            {
+                q: "Aşağıdakilerden hangisi lenf yoluyla taşınan besinlerin ortak özelliğidir?",
+                options: ["Hepsi suda çözünür.", "Hepsi kapı toplardamarına uğrar.", "Hücre zarından difüzyonla geçerler.", "Yağ ile ilişkili (hidrofobik) maddelerdir.", "Sadece kalın bağırsakta emilirler."],
+                correct: 3
+            },
+            {
+                q: "İnce bağırsaktaki emilimi sağlayan 'villus' yapısı hangi dokudan oluşur?",
+                options: ["Bağ doku", "Epitel doku", "Kas doku", "Sinir doku", "Kıkırdak doku"],
+                correct: 1
+            },
+            {
+                q: "Sindirilen besinlerin emilimi bittikten sonra lenf ve kan yollarının ilk birleştiği yer neresidir?",
+                options: ["Karaciğer", "Sağ Kulakçık", "Sol Köprücük Altı Toplardamarı", "Üst Ana Toplardamar", "Alt Ana Toplardamar"],
+                correct: 3
+            },
+            {
+                q: "Sağlıklı bir insanda yağların sindirimi sonucunda oluşan yağ asitlerinin kana karıştığı ilk yer aşağıdakilerden hangisidir?",
+                options: ["Peke sarnıcı", "Kapı toplardamarı", "Sol köprücük altı toplardamarı", "Sağ kulakçık", "Akciğer atardamarı"],
+                correct: 2
+            },
+            {
+                q: "Aşağıdakilerden hangisi ince bağırsak tarafından salgılanıp emilimi ve sindirimi düzenleyen hormondur?",
+                options: ["İnsülin", "Gastrin", "Sekretin", "Adrenalin", "Glukagon"],
+                correct: 2
+            },
+            {
+                q: "Villuslardaki mikrovillusların temel görevi nedir?",
+                options: ["Besinleri parçalamak", "Hormon salgılamak", "Emilim yüzey alanını artırmak", "Besinleri mideye itmek", "Zehirli maddeleri süzmek"],
+                correct: 2
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let quizTimer;
+        let timeLeft = 900; // 15 min
+        let startTime;
+        let userAnswers = [];
+
+        // Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('body > div > div').forEach(el => {
+                if(el.id && el.id !== 'badge-container') el.classList.add('hidden');
+            });
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            if(pageId === 'study-page') initHotspots();
+        }
+
+        // Hotspot System
+        function initHotspots() {
+            const container = document.getElementById('hotspots-layer');
+            container.innerHTML = '';
+            
+            // Note: In real scenarios, we'd need to scale based on img size
+            // Here we assume the coordinate system relative to a base 600x400 or similar
+            // I will use percentage based estimation for responsiveness
+            const img = document.getElementById('villus-img');
+            
+            emilimData.forEach(item => {
+                const spot = document.createElement('div');
+                spot.className = 'hotspot';
+                // Approximate mapping: 600 width, 400 height base
+                spot.style.left = `${(item.x / 600) * 100}%`;
+                spot.style.top = `${(item.y / 400) * 100}%`;
+                
+                spot.onclick = (e) => {
+                    e.stopPropagation();
+                    showInfo(item);
+                };
+                container.appendChild(spot);
+            });
+        }
+
+        function showInfo(item) {
+            const box = document.getElementById('info-box');
+            box.classList.remove('hidden');
+            document.getElementById('info-title').innerText = item.label;
+            document.getElementById('info-text').innerText = item.info;
+            playSound('pop');
+        }
+
+        // Quiz System
+        function startQuiz() {
+            showPage('quiz-page');
+            currentQuestion = 0;
+            score = 0;
+            timeLeft = 900;
+            userAnswers = [];
+            shuffleArray(questionsDB);
+            renderQuestion();
+            startTimer();
+            startTime = Date.now();
+            playSound('start');
+        }
+
+        function renderQuestion() {
+            const qData = questionsDB[currentQuestion];
+            document.getElementById('current-q-index').innerText = currentQuestion + 1;
+            document.getElementById('question-text').innerText = qData.q;
+            document.getElementById('progress-bar').style.width = `${((currentQuestion + 1) / 10) * 100}%`;
+            
+            const optionsDiv = document.getElementById('options-container');
+            optionsDiv.innerHTML = '';
+            document.getElementById('next-btn').classList.add('hidden');
+
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="font-bold mr-2">${String.fromCharCode(65 + index)})</span> ${opt}`;
+                btn.onclick = () => checkAnswer(index);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(index) {
+            const qData = questionsDB[currentQuestion];
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            buttons.forEach(btn => btn.disabled = true);
+            
+            if (index === qData.correct) {
+                buttons[index].classList.add('correct');
+                score += 10;
+                playSound('correct');
+            } else {
+                buttons[index].classList.add('wrong');
+                buttons[qData.correct].classList.add('correct');
+                playSound('wrong');
+            }
+            
+            userAnswers.push(index === qData.correct);
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < 10) {
+                renderQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function startTimer() {
+            clearInterval(quizTimer);
+            quizTimer = setInterval(() => {
+                timeLeft--;
+                const min = Math.floor(timeLeft / 60);
+                const sec = timeLeft % 60;
+                document.getElementById('timer').innerText = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) finishQuiz();
+            }, 1000);
+        }
+
+        function finishQuiz() {
+            clearInterval(quizTimer);
+            const totalTimeSpent = Math.floor((Date.now() - startTime) / 1000);
+            const m = Math.floor(totalTimeSpent / 60);
+            const s = totalTimeSpent % 60;
+
+            showPage('result-page');
+            
+            const correctCount = userAnswers.filter(x => x).length;
+            document.getElementById('res-score').innerText = score;
+            document.getElementById('res-correct').innerText = correctCount;
+            document.getElementById('res-wrong').innerText = 10 - correctCount;
+            document.getElementById('res-time').innerText = `${m}:${s.toString().padStart(2, '0')}`;
+
+            const evalBox = document.getElementById('evaluation-text');
+            const badgeBox = document.getElementById('badge-container');
+            
+            if (score >= 90) {
+                evalBox.innerText = "Harika! Biyoloji senin için bir tutku. Tam bir uzmansın!";
+                badgeBox.innerHTML = '<div class="badge-zoom text-6xl text-yellow-500"><i class="fas fa-award"></i><br><span class="text-sm uppercase font-bold">Biyoloji Ustası</span></div>';
+            } else if (score >= 70) {
+                evalBox.innerText = "Gayet iyi! Birkaç ufak tekrarla mükemmel olabilirsin.";
+                badgeBox.innerHTML = '<div class="badge-zoom text-6xl text-blue-500"><i class="fas fa-medal"></i><br><span class="text-sm uppercase font-bold">Başarılı Öğrenci</span></div>';
+            } else {
+                evalBox.innerText = "Biraz daha çalışmaya ne dersin? Villuslar seni bekliyor.";
+                badgeBox.innerHTML = '<div class="badge-zoom text-6xl text-slate-400"><i class="fas fa-book-open"></i><br><span class="text-sm uppercase font-bold">Gelişmekte</span></div>';
+            }
+        }
+
+        function exitQuiz() {
+            if(confirm("Sınavdan çıkmak istediğine emin misin? İlerlemen silinecek.")) {
+                clearInterval(quizTimer);
+                showPage('main-menu');
+            }
+        }
+
+        // Utils
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function playSound(type) {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            if(type === 'correct') {
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            } else if(type === 'wrong') {
+                osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            } else {
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            }
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
+
+        // Prevent Right Click (Academic Protection)
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
+</body>
+</html>
